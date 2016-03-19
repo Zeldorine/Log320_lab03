@@ -23,7 +23,7 @@ public class TableTransposition {
         Table = new HashMap<Long, EntreeTableTransposition>();
     }
 
-    public static void StoreEntry(long Key, EntreeTableTransposition Entry) {
+    public static void sauveEntree(long Key, EntreeTableTransposition Entry) {
         if (!Table.containsKey(Key)) {
             Table.put(Key, Entry);
         }

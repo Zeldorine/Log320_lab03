@@ -5,19 +5,19 @@ package log320_lab03;
  * @author Zeldorine
  */
 public class EntreeTableTransposition {
-    public enum BoardTTEntryType {
-        ExactValue,
-        Lowerbound,
-        Upperbound
+    public enum EntreeTableTranspositionType {
+        valeurExacte,
+        limiteInferieure,
+        limiteSuperieure
     }
 
-    public EntreeTableTransposition(int BoardValue, BoardTTEntryType EntryType, int SearchDepth) {
-        Value = BoardValue;
-        Type = EntryType;
-        Depth = SearchDepth;
+    public EntreeTableTransposition(int valeurBoard, EntreeTableTranspositionType entreeType, int profondeurRecherche) {
+        valeur = valeurBoard;
+        Type = entreeType;
+        profondeur = profondeurRecherche;
     }
 
-    public int Value;
-    public BoardTTEntryType Type;
-    public int Depth;
+    public int valeur;
+    public EntreeTableTranspositionType Type;
+    public int profondeur;
 }

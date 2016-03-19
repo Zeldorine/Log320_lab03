@@ -5,7 +5,7 @@ import java.util.HashMap;
 import static log320_lab03.Client.BLANC;
 import static log320_lab03.Client.COULEUR_JOUEUR;
 import static log320_lab03.Client.NOIR;
-import log320_lab03.EntreeTableTransposition.BoardTTEntryType;
+import log320_lab03.EntreeTableTransposition.EntreeTableTranspositionType;
 import static log320_lab03.FonctionEvaluation.valeurGagnant;
 
 /**
@@ -72,11 +72,11 @@ public class AlphaBeta {
             Move moveAEvaluer = moves.get(i);
             int valeur;
             if (premierAppel) {
-                valeur = -AlphaBetaTT(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -infini, -meilleurValeur, ObtenirCouleurOppose(couleur));
+                valeur = -AlphaBeta(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -infini, -meilleurValeur, ObtenirCouleurOppose(couleur));
             } else {
-                valeur = -AlphaBetaTT(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -meilleurValeur - 1, -meilleurValeur, ObtenirCouleurOppose(couleur));
+                valeur = -AlphaBeta(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -meilleurValeur - 1, -meilleurValeur, ObtenirCouleurOppose(couleur));
                 if (valeur > meilleurValeur) {
-                    valeur = -AlphaBetaTT(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -infini, -meilleurValeur, ObtenirCouleurOppose(couleur));
+                    valeur = -AlphaBeta(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -infini, -meilleurValeur, ObtenirCouleurOppose(couleur));
                 }
             }
 
@@ -216,47 +216,47 @@ public class AlphaBeta {
         return profondeur;
     }
 
-    private static int AlphaBetaTT(Move ExamineBoard, int Depth, int Alpha, int Beta, int couleur) {
+    private static int AlphaBetaTT(Move ExamineBoard, int profondeur, int Alpha, int Beta, int couleur) {
         if (timer.getTime() >= tempsPourJouer) {
             stop = true;
             return tempsFin;
         }
 
         long HashValue = Service.GetHashValue(ExamineBoard.board, couleur);
-        EntreeTableTransposition TTEntry = null;
-        boolean Contains = TableTransposition.instance.Table.containsKey(HashValue);
-        if (Contains) {
+        EntreeTableTransposition entree = null;
+        boolean contient = TableTransposition.instance.Table.containsKey(HashValue);
+        if (contient) {
             //System.out.println("Hash contains");
-            TTEntry = TableTransposition.instance.Table.get(HashValue);
+            entree = TableTransposition.instance.Table.get(HashValue);
         }
 
-        if (Contains && TTEntry != null && TTEntry.Depth >= Depth) {
-            BoardTTEntryType TTEntryType = TTEntry.Type;
+        if (contient && entree != null && entree.profondeur >= profondeur) {
+            EntreeTableTranspositionType entreType = entree.Type;
 
-            if (TTEntryType == BoardTTEntryType.ExactValue) // stored value is exact
+            if (entreType == EntreeTableTranspositionType.valeurExacte) 
             {
-                return TTEntry.Value;
+                return entree.valeur;
             }
-            if (TTEntryType == BoardTTEntryType.Lowerbound && TTEntry.Value > Alpha) {
-                Alpha = TTEntry.Value; // update lowerbound alpha if needed
-            } else if (TTEntryType == BoardTTEntryType.Upperbound && TTEntry.Value < Beta) {
-                Beta = TTEntry.Value; // update upperbound beta if needed
+            if (entreType == EntreeTableTranspositionType.limiteInferieure && entree.valeur > Alpha) {
+                Alpha = entree.valeur;
+            } else if (entreType == EntreeTableTranspositionType.limiteSuperieure && entree.valeur < Beta) {
+                Beta = entree.valeur; 
             }
             if (Alpha >= Beta) {
-                return TTEntry.Value; // if lowerbound surpasses upperbound
+                return entree.valeur; 
             }
         }
-        if (Depth == 0 || Service.plateauFinal(ExamineBoard.board)) {
-            int value = ExamineBoard.valeur + Depth; // add depth (since it's inverse)
-            if (value <= Alpha) // a lowerbound value
+        if (profondeur == 0 || Service.plateauFinal(ExamineBoard.board)) {
+            int value = ExamineBoard.valeur + profondeur;
+            if (value <= Alpha) 
             {
-                TableTransposition.instance.StoreEntry(HashValue, new EntreeTableTransposition(value, BoardTTEntryType.Lowerbound, Depth));
-            } else if (value >= Beta) // an upperbound value
+                TableTransposition.instance.sauveEntree(HashValue, new EntreeTableTransposition(value, EntreeTableTranspositionType.limiteInferieure, profondeur));
+            } else if (value >= Beta) 
             {
-                TableTransposition.instance.StoreEntry(HashValue, new EntreeTableTransposition(value, BoardTTEntryType.Upperbound, Depth));
-            } else // a true minimax value
+                TableTransposition.instance.sauveEntree(HashValue, new EntreeTableTransposition(value, EntreeTableTranspositionType.limiteSuperieure, profondeur));
+            } else
             {
-                TableTransposition.instance.StoreEntry(HashValue, new EntreeTableTransposition(value, BoardTTEntryType.ExactValue, Depth));
+                TableTransposition.instance.sauveEntree(HashValue, new EntreeTableTransposition(value, EntreeTableTranspositionType.valeurExacte, profondeur));
             }
             return value;
         }
@@ -268,47 +268,47 @@ public class AlphaBeta {
             return tempsFin;
         }
 
-        ArrayList<Move> Successors = FonctionEvaluation_NEW.coupPossible(ExamineBoard.board, couleur);
-        int totalBoards = Successors.size();
+        ArrayList<Move> moves = FonctionEvaluation_NEW.coupPossible(ExamineBoard.board, couleur);
+        int totalMoves = moves.size();
 
-        if (totalBoards == 0) {
+        if (totalMoves == 0) {
             return ExamineBoard.valeur;
         }
 
-        Depth--;
-        int Best = -valeurGagnant - 1;
+        profondeur--;
+        int meilleur = -valeurGagnant - 1;
 
-        Move BoardToEvaluate;
-        for (int i = 0; i < totalBoards; i++) {
+        Move moveAEvaluer;
+        for (int i = 0; i < totalMoves; i++) {
             if (timer.getTime() >= tempsPourJouer) {
                 stop = true;
                 return tempsFin;
             }
 
-            BoardToEvaluate = Successors.get(i);
-            int value = -AlphaBetaTT(BoardToEvaluate, Depth, -Beta, -Alpha, Service.getOppositeColor(couleur));
+            moveAEvaluer = moves.get(i);
+            int valeur = -AlphaBetaTT(moveAEvaluer, profondeur, -Beta, -Alpha, Service.getOppositeColor(couleur));
 
-            if (value > Best) {
-                Best = value;
+            if (valeur > meilleur) {
+                meilleur = valeur;
             }
-            if (Best > Alpha) {
-                Alpha = Best;
+            if (meilleur > Alpha) {
+                Alpha = meilleur;
             }
-            if (Best >= Beta) {
+            if (meilleur >= Beta) {
                 break;
             }
         }
 
-        if (Best <= Alpha) // a lowerbound value
+        if (meilleur <= Alpha) // a lowerbound value
         {
-            TableTransposition.instance.StoreEntry(HashValue, new EntreeTableTransposition(Best, BoardTTEntryType.Lowerbound, Depth));
-        } else if (Best >= Beta) // an upperbound value
+            TableTransposition.instance.sauveEntree(HashValue, new EntreeTableTransposition(meilleur, EntreeTableTranspositionType.limiteInferieure, profondeur));
+        } else if (meilleur >= Beta) // an upperbound value
         {
-            TableTransposition.instance.StoreEntry(HashValue, new EntreeTableTransposition(Best, BoardTTEntryType.Upperbound, Depth));
+            TableTransposition.instance.sauveEntree(HashValue, new EntreeTableTransposition(meilleur, EntreeTableTranspositionType.limiteSuperieure, profondeur));
         } else // a true minimax value
         {
-            TableTransposition.instance.StoreEntry(HashValue, new EntreeTableTransposition(Best, BoardTTEntryType.ExactValue, Depth));
+            TableTransposition.instance.sauveEntree(HashValue, new EntreeTableTransposition(meilleur, EntreeTableTranspositionType.valeurExacte, profondeur));
         }
-        return Best;
+        return meilleur;
     }
 }
