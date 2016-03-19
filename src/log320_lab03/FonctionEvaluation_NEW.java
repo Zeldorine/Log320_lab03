@@ -3,6 +3,7 @@ package log320_lab03;
 import java.util.ArrayList;
 import java.util.Collections;
 import static log320_lab03.Client.BLANC;
+import static log320_lab03.Client.CASE_VIDE;
 import static log320_lab03.Client.NOIR;
 
 /**
@@ -27,7 +28,7 @@ public class FonctionEvaluation_NEW {
                         int iplus1 = i + 1;
                         int imoins1 = i - 1;
 
-                        if ((jplus1) < 8 && board[i][jplus1] != BLANC && board[i][jplus1] != NOIR) {
+                        if ((jplus1) < 8 && board[i][jplus1] == CASE_VIDE) {
                             ajouterCoup(coups, i, j, i, jplus1, BLANC);
                         }
 
@@ -49,7 +50,7 @@ public class FonctionEvaluation_NEW {
                         int iplus1 = i + 1;
                         int imoins1 = i - 1;
 
-                        if ((jmoins1) >= 0 && board[i][jmoins1] != NOIR && board[i][jmoins1] != BLANC) {
+                        if ((jmoins1) >= 0 && board[i][jmoins1] == CASE_VIDE) {
                             ajouterCoup(coups, i, j, i, jmoins1, NOIR);
                         }
 

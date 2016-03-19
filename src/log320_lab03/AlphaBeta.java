@@ -22,7 +22,7 @@ public class AlphaBeta {
     private static final int infini = 500000;
     private static boolean stop = false;
 
-    public static Move AlphaBetaIteratif(int[][] ExamineBoard, int couleur, boolean verbose) {
+    public static Move AlphaBetaIteratif(int[][] ExamineBoard, int couleur, boolean verbose,  ArrayList<Move> coupsPossible) {
         timer.Reset();
         timer.Start();
         stop = false;
@@ -33,7 +33,7 @@ public class AlphaBeta {
         int profondeur;
 
         for (profondeur = 1; profondeur < profondeurMax; profondeur++) {
-            dernierMove = AlphaBetaRoot(ExamineBoard, profondeur, couleur);
+            dernierMove = AlphaBetaRoot(ExamineBoard, profondeur, couleur, coupsPossible);
 
             if (timer.getTime() >= tempsPourJouer || dernierMove == null) {
                 stop = true;
@@ -53,15 +53,14 @@ public class AlphaBeta {
         return meilleurMove;
     }
 
-    public static Move AlphaBetaRoot(int[][] ExamineBoard, int profondeur, int couleur) {
+    public static Move AlphaBetaRoot(int[][] ExamineBoard, int profondeur, int couleur, ArrayList<Move> coupsPossible) {
         int meilleurValeur = -infini;
         boolean premierAppel = true;
         nbNoeud = 0;
         profondeur--;
 
-        ArrayList<Move> moves = FonctionEvaluation_NEW.coupPossible(ExamineBoard, couleur);
-        int totalMoves = moves.size();
-        Move meilleurMove = moves.get(0);
+        int totalMoves = coupsPossible.size();
+        Move meilleurMove = coupsPossible.get(0);
 
         for (int i = 0; i < totalMoves; i++) {
             if (timer.getTime() >= tempsPourJouer) {
@@ -69,14 +68,14 @@ public class AlphaBeta {
                 return null;
             }
 
-            Move moveAEvaluer = moves.get(i);
+            Move moveAEvaluer = coupsPossible.get(i);
             int valeur;
             if (premierAppel) {
-                valeur = -AlphaBeta(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -infini, -meilleurValeur, ObtenirCouleurOppose(couleur));
+                valeur = -AlphaBetaTT(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -infini, -meilleurValeur, ObtenirCouleurOppose(couleur));
             } else {
-                valeur = -AlphaBeta(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -meilleurValeur - 1, -meilleurValeur, ObtenirCouleurOppose(couleur));
+                valeur = -AlphaBetaTT(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -meilleurValeur - 1, -meilleurValeur, ObtenirCouleurOppose(couleur));
                 if (valeur > meilleurValeur) {
-                    valeur = -AlphaBeta(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -infini, -meilleurValeur, ObtenirCouleurOppose(couleur));
+                    valeur = -AlphaBetaTT(moveAEvaluer, modifierProdonfeur(profondeur, totalMoves), -infini, -meilleurValeur, ObtenirCouleurOppose(couleur));
                 }
             }
 
@@ -226,7 +225,6 @@ public class AlphaBeta {
         EntreeTableTransposition entree = null;
         boolean contient = TableTransposition.instance.Table.containsKey(HashValue);
         if (contient) {
-            //System.out.println("Hash contains");
             entree = TableTransposition.instance.Table.get(HashValue);
         }
 

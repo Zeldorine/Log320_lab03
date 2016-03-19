@@ -8,7 +8,7 @@ import java.util.ArrayList;
  *
  * @author Zeldorine
  */
-class Client {
+public class Client {
 
     private static Socket MyClient;
     private static BufferedInputStream input;
@@ -87,7 +87,7 @@ class Client {
         ArrayList<Move> coupsPossible = FonctionEvaluation_NEW.coupPossible(board, COULEUR_JOUEUR);
         bestMoveG = null;
         firstBestMove = coupsPossible.get(0);
-        bestMoveG = AlphaBeta.AlphaBetaIteratif(board, COULEUR_JOUEUR, true);
+        bestMoveG = AlphaBeta.AlphaBetaIteratif(board, COULEUR_JOUEUR, true, coupsPossible);
 
         if (bestMoveG == null) {
             bestMoveG = firstBestMove;

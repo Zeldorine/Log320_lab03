@@ -200,4 +200,45 @@ public class Service {
 
         return HashValue;
     }
+
+    public static int nbMovesPossible(int[][] board, int i, int j) {
+        int nbMove = 0;
+        int couleur = board[i][j];
+
+        if (couleur == BLANC) {
+            int jplus1 = j + 1;
+            int iplus1 = i + 1;
+            int imoins1 = i - 1;
+
+            if ((jplus1) < 8 && board[i][jplus1] == CASE_VIDE) {
+                nbMove++;
+            }
+
+            if (imoins1 >= 0 && (jplus1) < 8 && board[imoins1][jplus1] != BLANC) {
+                nbMove++;
+            }
+
+            if (iplus1 < 8 && (jplus1) < 8 && board[iplus1][jplus1] != BLANC) {
+                nbMove++;
+            }
+        } else if (couleur == NOIR) {
+            int jmoins1 = j - 1;
+            int iplus1 = i + 1;
+            int imoins1 = i - 1;
+
+            if ((jmoins1) >= 0 && board[i][jmoins1] == CASE_VIDE) {
+                nbMove++;
+            }
+
+            if (imoins1 >= 0 && jmoins1 >= 0 && board[imoins1][jmoins1] != NOIR) {
+                nbMove++;
+            }
+
+            if (iplus1 < 8 && jmoins1 >= 0 && board[iplus1][jmoins1] != NOIR) {
+                nbMove++;
+            }
+        }
+
+        return nbMove;
+    }
 }
