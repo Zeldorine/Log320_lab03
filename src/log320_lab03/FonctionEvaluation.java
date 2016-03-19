@@ -237,9 +237,9 @@ public class FonctionEvaluation {
 
             if (imoins1 >= 0 && jmoins1 >= 0) {
                 if (board[imoins1][jmoins1] == BLANC) {
-                    attaque -= valeurPionAttaque;
+                    attaque += valeurPionAttaque;
                 } else if (board[imoins1][jmoins1] == NOIR) {
-                    protege -= valeurPionProtege;
+                    protege += valeurPionProtege;
                 }
             }
 
