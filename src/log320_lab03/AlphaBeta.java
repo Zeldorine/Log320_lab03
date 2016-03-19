@@ -299,13 +299,13 @@ public class AlphaBeta {
             }
         }
 
-        if (meilleur <= Alpha) // a lowerbound value
+        if (meilleur <= Alpha) 
         {
             TableTransposition.instance.sauveEntree(HashValue, new EntreeTableTransposition(meilleur, EntreeTableTranspositionType.limiteInferieure, profondeur));
-        } else if (meilleur >= Beta) // an upperbound value
+        } else if (meilleur >= Beta)
         {
             TableTransposition.instance.sauveEntree(HashValue, new EntreeTableTransposition(meilleur, EntreeTableTranspositionType.limiteSuperieure, profondeur));
-        } else // a true minimax value
+        } else 
         {
             TableTransposition.instance.sauveEntree(HashValue, new EntreeTableTransposition(meilleur, EntreeTableTranspositionType.valeurExacte, profondeur));
         }
