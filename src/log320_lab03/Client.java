@@ -22,6 +22,8 @@ public class Client {
     private static Move firstBestMove;
     public static Move bestMoveG;
     public static SimpleStopwatch Watch = new SimpleStopwatch();
+    public static int nbBlanc = 16;
+    public static int nbNoir = 16;
 
     /**
      * Blanc joue en premier 5 seconde pour jouer Garder un tableua de pion
@@ -84,8 +86,8 @@ public class Client {
     }
 
     private static void jouer() throws IOException {
-        ArrayList<Move> coupsPossible = FonctionEvaluation_NEW.coupPossible(board, COULEUR_JOUEUR);
         bestMoveG = null;
+        ArrayList<Move> coupsPossible = FonctionEvaluation_NEW.coupPossible(board, COULEUR_JOUEUR);
         firstBestMove = coupsPossible.get(0);
         bestMoveG = AlphaBeta.AlphaBetaIteratif(board, COULEUR_JOUEUR, true, coupsPossible);
 
@@ -93,13 +95,19 @@ public class Client {
             bestMoveG = firstBestMove;
         }
 
-        String move = bestMoveG.move;
+        //String move = bestMoveG.move;
+        StringBuilder tmp = new StringBuilder();
+        tmp.append(Service.getLigne(bestMoveG.departX));
+        tmp.append(bestMoveG.departY + 1);
+        tmp.append(Service.getLigne(bestMoveG.arriveeX));
+        tmp.append(bestMoveG.arriveeY + 1);
+        String move = tmp.toString();
 
         output.write(move.getBytes(), 0, move.length());
         output.flush();
 
         Watch.Stop();
-        System.out.println("Coup jouer : " + bestMoveG.toString());
+        System.out.println("Coup jouer : " + move + " -> " + bestMoveG.valeur);
         Service.effectuerMove(board, move, COULEUR_JOUEUR);
 
         bestMoveG = null;

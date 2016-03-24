@@ -42,7 +42,7 @@ public class FonctionEvaluation_NEW {
                     }
                 }
             }
-        } else if (couleur == NOIR) {
+        } else {
             for (int i = 0; i < 8; i++) {
                 for (int j = 7; j >= 0; j--) {
                     if (board[i][j] == NOIR) {
@@ -67,22 +67,16 @@ public class FonctionEvaluation_NEW {
         }
 
         nombreDeMoves = coups.size() + 5;
-        Collections.sort(coups, Service.getComparateurMove());
+        
+        // Ordonner les coups pour le killer Move
+        Collections.sort(coups, Service.getComparateurMove(couleur));
         return coups;
     }
 
     private static void ajouterCoup(ArrayList coups, int departX, int departY, int arriveeX, int arriveeY, int couleur) {
-        StringBuilder tmp = new StringBuilder();
-
-        tmp.append(Service.getLigne(departX));
-        tmp.append(departY + 1);
-        tmp.append(Service.getLigne(arriveeX));
-        tmp.append(arriveeY + 1);
-
-        String move = tmp.toString();
         int[][] tmpBoard = Service.copieBoard(board);
-        Service.effectuerMove(tmpBoard, move, couleur);
+        Service.effectuerMove(tmpBoard, departX, departY, arriveeX, arriveeY, couleur);
 
-        coups.add(new Move(tmpBoard, move, FonctionEvaluation.GetValue(tmpBoard, couleur)));
+        coups.add(new Move(tmpBoard, departX, departY, arriveeX, arriveeY, FonctionEvaluation.GetValue(tmpBoard, couleur), Service.GetHashValue(tmpBoard, couleur)));
     }
 }

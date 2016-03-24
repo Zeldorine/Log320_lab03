@@ -14,8 +14,8 @@ public class FonctionEvaluation {
     public static final int valeurGagnant = 500000;
     public static final short valeurPionProcheGagner = 10000;
     public static final short valeurPion = 1300;
-    public static final short valeurPionDanger = 30;
-    public static final short valeurPionMoyenDanger = 60;
+    public static final short valeurPionDanger = 10;
+    //public static final short valeurPionMoyenDanger = 80;
     public static final short valeurPionFortDanger = 100;
     public static final short valeurPionAttaque = 50;
     public static final short valeurPionProtege = 65;
@@ -46,7 +46,7 @@ public class FonctionEvaluation {
                 if (pion == Client.BLANC) {
                     totalBlancPions++;
                     totalBlancColonne++;
-                    valeur += GetPieceValeur(board, i, j);
+                    valeur += GetPieceValeur(board, i, j, couleur);
                     if (j == 7) {
                         BlancGagne = true;
                     } else if (j == 6) {
@@ -67,7 +67,7 @@ public class FonctionEvaluation {
                 } else {
                     totalNoirPions++;
                     totalNoirColonne++;
-                    valeur -= GetPieceValeur(board, i, j);
+                    valeur -= GetPieceValeur(board, i, j, couleur);
                     if (j == 0) {
                         noirGagne = true;
                     } else if (j == 1) {
@@ -98,9 +98,14 @@ public class FonctionEvaluation {
 
         if (totalBlancPions == 0) {
             noirGagne = true;
+        } else {
+            valeur += totalBlancPions;
         }
+
         if (totalNoirPions == 0) {
             BlancGagne = true;
+        } else {
+            valeur -= totalNoirPions;
         }
 
         if (BlancGagne) {
@@ -109,19 +114,20 @@ public class FonctionEvaluation {
             valeur -= valeurGagnant;
         }
 
-        if (ObtenirCouleurOppose(couleur) == NOIR) {
+        // Pour NegaMax
+        if (Service.getOppositeColor(couleur) == NOIR) {
             valeur = -valeur;
         }
 
         return valeur;
     }
 
-    private static int GetPieceValeur(int[][] board, int ligne, int colonne) {
+    private static int GetPieceValeur(int[][] board, int ligne, int colonne, int joueur) {
         int valeur = valeurPion;
         int couleur = board[ligne][colonne];
-        int[] mangeProtege = mangeProtege(board, ligne, colonne);
-        int protege = mangeProtege[1];
-        int mange = mangeProtege[0];
+        //int[] mangeProtege = mangeProtege(board, ligne, colonne, joueur);
+        //int protege = protege(board, ligne, colonne);
+        int mange = mange(board, ligne, colonne, joueur);
 
         if (connecteHorizontal(board, ligne, colonne)) {
             valeur += valeurPionConnecteHorizontal;
@@ -130,35 +136,41 @@ public class FonctionEvaluation {
             valeur += valeurPionConnecteVertical;
         }
 
-        //valeur += valeurPionProtege;
+        //  valeur += valeurPionProtege;
         if (mange > 0) {
-            valeur += valeurPionAttaque;
+            valeur -= valeurPionAttaque;
+            // if (protege == 0) {
+            //    valeur -= valeurPionProtege;
+            //  }
         }
-        /*if (protege == 0) {
-                valeur -= valeurPionAttaque;
-            }*/
+
         //  } else if (protege != 0) {
+        int multiplicateur = 1;
         if (couleur == BLANC) {
-            if (ligne == 4) {
-                valeur += valeurPionDanger;
-            } else if (ligne == 5) {
-                valeur += valeurPionMoyenDanger;
-            } else if (ligne == 6) {
-                valeur += valeurPionFortDanger;
+            if (COULEUR_JOUEUR == NOIR) {
+                multiplicateur = 3;
             }
-        } else if (ligne == 3) {
-            valeur += valeurPionDanger;
-        } else if (ligne == 2) {
-            valeur += valeurPionMoyenDanger;
-        } else if (ligne == 1) {
-            valeur += valeurPionFortDanger;
+            if (ligne == 5) {
+                valeur += valeurPionDanger * multiplicateur;
+            } else if (ligne == 6) {
+                valeur += valeurPionFortDanger * multiplicateur;
+            }
+        } else {
+            if (COULEUR_JOUEUR == BLANC) {
+                multiplicateur = 3;
+            }
+            if (ligne == 2) {
+                valeur += valeurPionDanger * multiplicateur;
+            } else if (ligne == 1) {
+                valeur += valeurPionFortDanger * multiplicateur;
+            }
         }
         //  }
 
         if (couleur == BLANC) {
-            valeur += ligne * valeurPionDanger;
+            valeur += (ligne) * valeurPionDanger;
         } else {
-            valeur += (8 - ligne) * valeurPionDanger;
+            valeur += (7 - ligne) * valeurPionDanger;
         }
 
         valeur += Service.nbMovesPossible(board, ligne, colonne);
@@ -167,7 +179,7 @@ public class FonctionEvaluation {
     }
 
     private static boolean connecteHorizontal(int[][] board, int i, int j) {
-        if (i > 1) {
+        if (i > 0) {
             if (board[i - 1][j] == board[i][j]) {
                 return true;
             }
@@ -183,7 +195,7 @@ public class FonctionEvaluation {
     }
 
     private static boolean connecteVertical(int[][] board, int i, int j) {
-        if (j > 1) {
+        if (j > 0) {
             if (board[i][j - 1] == board[i][j]) {
                 return true;
             }
@@ -198,15 +210,87 @@ public class FonctionEvaluation {
         return false;
     }
 
-    private static int ObtenirCouleurOppose(int couleur) {
-        if (couleur == NOIR) {
-            return BLANC;
+    private static int mange(int[][] board, int i, int j, int joueur) {
+        int attaque = 0;
+
+        if (board[i][j] == BLANC) {
+            int jplus1 = j + 1;
+            int iplus1 = i + 1;
+            int imoins1 = i - 1;
+
+            if (imoins1 >= 0 && (jplus1) < 8) {
+                if (board[imoins1][jplus1] == NOIR && joueur == BLANC) {
+                    attaque += valeurPionAttaque;
+                }
+            }
+
+            if (iplus1 < 8 && (jplus1) < 8) {
+                if (board[iplus1][jplus1] == NOIR && joueur == BLANC) {
+                    attaque += valeurPionAttaque;
+                }
+            }
         } else {
-            return NOIR;
+            int jmoins1 = j - 1;
+            int iplus1 = i + 1;
+            int imoins1 = i - 1;
+
+            if (imoins1 >= 0 && jmoins1 >= 0) {
+                if (board[imoins1][jmoins1] == BLANC && joueur == NOIR) {
+                    attaque += valeurPionAttaque;
+                }
+            }
+
+            if (iplus1 < 8 && jmoins1 >= 0) {
+                if (board[iplus1][jmoins1] == BLANC && joueur == NOIR) {
+                    attaque += valeurPionAttaque;
+                }
+            }
         }
+
+        return attaque;
     }
 
-    private static int[] mangeProtege(int[][] board, int i, int j) {
+    private static int protege(int[][] board, int i, int j) {
+        int protege = 0;
+
+        if (board[i][j] == BLANC) {
+            int jmoins1 = j - 1;
+            int iplus1 = i + 1;
+            int imoins1 = i - 1;
+
+            if (imoins1 >= 0 && jmoins1 >= 0) {
+                if (board[imoins1][jmoins1] == BLANC) {
+                    protege += valeurPionProtege;
+                }
+            }
+
+            if (iplus1 < 8 && jmoins1 >= 0) {
+                if (board[iplus1][jmoins1] == BLANC) {
+                    protege += valeurPionProtege;
+                }
+            }
+        } else {
+            int jplus1 = j + 1;
+            int iplus1 = i + 1;
+            int imoins1 = i - 1;
+
+            if (imoins1 >= 0 && jplus1 < 8) {
+                if (board[imoins1][jplus1] == NOIR) {
+                    protege += valeurPionProtege;
+                }
+            }
+
+            if (iplus1 < 8 && jplus1 < 8) {
+                if (board[iplus1][jplus1] == NOIR) {
+                    protege += valeurPionProtege;
+                }
+            }
+        }
+
+        return protege;
+    }
+
+    private static int[] mangeProtege(int[][] board, int i, int j, int joueur) {
         int attaque = 0;
         int protege = 0;
 
@@ -216,19 +300,30 @@ public class FonctionEvaluation {
             int imoins1 = i - 1;
 
             if (imoins1 >= 0 && (jplus1) < 8) {
-                if (board[imoins1][jplus1] == NOIR) {
+                if (board[imoins1][jplus1] == NOIR && joueur == BLANC) {
                     attaque += valeurPionAttaque;
-                } else if (board[imoins1][jplus1] == BLANC) {
+                } /*else if (board[imoins1][jplus1] == NOIR && joueur == NOIR) {
+                    attaque += valeurPionAttaque;
+                } */ else if (board[imoins1][jplus1] == BLANC) {
                     protege += valeurPionProtege;
                 }
             }
 
             if (iplus1 < 8 && (jplus1) < 8) {
-                if (board[iplus1][jplus1] == NOIR) {
+                if (board[iplus1][jplus1] == NOIR && joueur == BLANC) {
                     attaque += valeurPionAttaque;
-                } else if (board[iplus1][jplus1] == BLANC) {
+                }/* else if (board[iplus1][jplus1] == NOIR && joueur == NOIR) {
+                    attaque += valeurPionAttaque;
+                } */ else if (board[iplus1][jplus1] == BLANC) {
                     protege += valeurPionProtege;
                 }
+
+                /*if (board[iplus1][jplus1] == NOIR) {
+                    attaque -= valeurPionAttaque;
+                }*/
+ /*else if (board[iplus1][jplus1] == BLANC) {
+                    protege += valeurPionProtege;
+                }*/
             }
         } else {
             int jmoins1 = j - 1;
@@ -236,19 +331,37 @@ public class FonctionEvaluation {
             int imoins1 = i - 1;
 
             if (imoins1 >= 0 && jmoins1 >= 0) {
-                if (board[imoins1][jmoins1] == BLANC) {
+                if (board[imoins1][jmoins1] == BLANC && joueur == NOIR) {
                     attaque += valeurPionAttaque;
-                } else if (board[imoins1][jmoins1] == NOIR) {
+                } /*else if (board[imoins1][jmoins1] == BLANC && joueur == BLANC) {
+                    attaque += valeurPionAttaque;
+                } */ else if (board[imoins1][jmoins1] == NOIR) {
                     protege += valeurPionProtege;
                 }
+
+                /*if (board[imoins1][jmoins1] == BLANC) {
+                    attaque -= valeurPionAttaque;
+                }*/
+ /*else if (board[imoins1][jmoins1] == NOIR) {
+                    protege += valeurPionProtege;
+                }*/
             }
 
             if (iplus1 < 8 && jmoins1 >= 0) {
-                if (board[iplus1][jmoins1] == BLANC) {
+                if (board[iplus1][jmoins1] == BLANC && joueur == NOIR) {
                     attaque += valeurPionAttaque;
-                } else if (board[iplus1][jmoins1] == NOIR) {
+                } /*else if (board[iplus1][jmoins1] == BLANC && joueur == BLANC) {
+                    attaque += valeurPionAttaque;
+                } */ else if (board[iplus1][jmoins1] == NOIR) {
                     protege += valeurPionProtege;
                 }
+
+                /* if (board[iplus1][jmoins1] == BLANC) {
+                    attaque -= valeurPionAttaque;
+                }*/
+ /*else if (board[iplus1][jmoins1] == NOIR) {
+                    protege += valeurPionProtege;
+                }*/
             }
         }
 

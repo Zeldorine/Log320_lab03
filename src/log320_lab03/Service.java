@@ -84,12 +84,21 @@ public class Service {
         }
     }
 
-    public static Comparator<Move> getComparateurMove() {
+    public static Comparator<Move> getComparateurMove(int couleur) {
         return new Comparator<Move>() {
             @Override
             public int compare(Move o1, Move o2) {
-                // Integer.c
-                return (o2.valeur - o1.valeur);
+                //int multiplicateur = couleur == BLANC ? -1 : 1;
+                return (o2.valeur - o1.valeur)/**
+                         * multiplicateur
+                         */
+                        ;
+
+                /*if(couleur == NOIR){
+                    return (o2.valeur - o1.valeur);
+                } else{
+                    return (o1.valeur - o2.valeur);
+                }*/
             }
         };
     }
@@ -108,6 +117,12 @@ public class Service {
 
         board[Service.getLigne(depart.charAt(0))][(int) depart.charAt(1) - 49] = 0;
         board[Service.getLigne(arrivee.charAt(0))][(int) arrivee.charAt(1) - 49] = couleur;
+    }
+    
+
+    public static void effectuerMove(int[][] board, int departX, int departY, int arriveeX, int arriveeY, int couleur) {
+        board[departX][departY] = 0;
+        board[arriveeX][arriveeY] = couleur;
     }
 
     public static int nbPieces(int[][] board) {
