@@ -1,9 +1,8 @@
 package log320_lab03;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import log320_lab03.EntreeTableTransposition.EntreeTableTranspositionType;
-import static log320_lab03.FonctionEvaluation.valeurGagnant;
+import static log320_lab03.FonctionEvaluation.GAGNANT;
 
 /**
  *
@@ -14,16 +13,13 @@ public class AlphaBeta {
     public static int nbNoeud = 0;
     public static SimpleStopwatch timer = new SimpleStopwatch();
     public static int profondeurMax = 8;
-    public static int tempsPourJouer = 4940;
+    public static int tempsPourJouer = 4950;
     private static final int tempsFin = -9999999;
     private static final int infini = 500000;
-    private static boolean stop = false;
 
     public static Move AlphaBetaIteratif(int[][] ExamineBoard, int couleur, boolean verbose, ArrayList<Move> coupsPossible) {
-        timer.Reset();
-        timer.Start();
-        stop = false;
-        TableTransposition.instance.Table = new HashMap<>();
+       // timer.Reset();
+       // timer.Start();
 
         Move meilleurMove = null;
         Move dernierMove = null;
@@ -33,18 +29,16 @@ public class AlphaBeta {
             dernierMove = AlphaBetaRoot(ExamineBoard, profondeur, couleur, coupsPossible);
 
             if (timer.getTime() >= tempsPourJouer || dernierMove == null) {
-                //stop = true;
                 break;
             }
 
             meilleurMove = dernierMove;
         }
 
-        if (verbose) {
+        /*if (verbose) {
             System.out.println("Profondeur recherche = " + profondeur);
             System.out.println("Nombre de noeud cherche = " + nbNoeud);
-        }
-
+         */
         return meilleurMove;
     }
 
@@ -52,7 +46,7 @@ public class AlphaBeta {
     public static Move AlphaBetaRoot(int[][] ExamineBoard, int profondeur, int couleur, ArrayList<Move> coupsPossible) {
         int meilleurValeur = -infini;
         boolean premierAppel = true;
-        nbNoeud = 0;
+        // nbNoeud = 0;
         profondeur--;
 
         int totalMoves = coupsPossible.size();
@@ -60,7 +54,6 @@ public class AlphaBeta {
 
         for (int i = 0; i < totalMoves; i++) {
             if (timer.getTime() >= tempsPourJouer) {
-                //stop = true;
                 return meilleurMove;
             }
 
@@ -77,14 +70,13 @@ public class AlphaBeta {
 
             if (valeur > meilleurValeur) {
                 meilleurValeur = valeur;
-                meilleurMove = new Move(moveAEvaluer.board, 
+                meilleurMove = new Move(moveAEvaluer.board,
                         moveAEvaluer.departX, moveAEvaluer.departY, moveAEvaluer.arriveeX, moveAEvaluer.arriveeY, meilleurValeur, moveAEvaluer.hash);
                 premierAppel = false;
             }
         }
 
         if (timer.getTime() >= tempsPourJouer) {
-            //stop = true;
             return null;
         }
 
@@ -92,8 +84,9 @@ public class AlphaBeta {
     }
 
     private static int AlphaBetaTT(Move ExamineBoard, int profondeur, int Alpha, int Beta, int couleur) {
+        //nbNoeud++;
+
         if (timer.getTime() >= tempsPourJouer) {
-            //stop = true;
             return tempsFin;
         }
 
@@ -110,9 +103,9 @@ public class AlphaBeta {
             if (entreType == EntreeTableTranspositionType.valeurExacte) {
                 return entree.valeur;
             }
-            if (entreType == EntreeTableTranspositionType.limiteInferieure/* && entree.valeur > Alpha*/) {
+            if (entreType == EntreeTableTranspositionType.limiteInferieure) {
                 Alpha = Math.max(Alpha, entree.valeur);
-            } else if (entreType == EntreeTableTranspositionType.limiteSuperieure/* && entree.valeur < Beta*/) {
+            } else if (entreType == EntreeTableTranspositionType.limiteSuperieure) {
                 Beta = Math.min(Beta, entree.valeur);
             }
             if (Alpha >= Beta) {
@@ -131,10 +124,7 @@ public class AlphaBeta {
             return value;
         }
 
-        nbNoeud++;
-
         if (timer.getTime() >= tempsPourJouer) {
-            //stop = true;
             return tempsFin;
         }
 
@@ -146,24 +136,17 @@ public class AlphaBeta {
         }
 
         profondeur--;
-        int meilleur = -valeurGagnant - 1;//Recherche aspirante avec fenetre null
+        int meilleur = -GAGNANT - 1;//Recherche aspirante avec fenetre null
 
         Move moveAEvaluer;
         for (int i = 0; i < totalMoves; i++) {
             if (timer.getTime() >= tempsPourJouer) {
-                //stop = true;
                 return tempsFin;
             }
 
             moveAEvaluer = moves.get(i);
             int valeur = -AlphaBetaTT(moveAEvaluer, profondeur, -Beta, -Alpha, Service.getOppositeColor(couleur));
             Alpha = meilleur = Math.max(meilleur, valeur);
-            /* if (valeur > meilleur) {
-                meilleur = valeur;
-            }
-            if (meilleur > Alpha) {
-                Alpha = meilleur;
-            }*/
             if (meilleur >= Beta) {
                 break;
             }
@@ -182,7 +165,7 @@ public class AlphaBeta {
 
     private static int modifierProdonfeur(int profondeur, int movesPossible) {
         if (movesPossible < 9) {
-            profondeur += 2;
+            profondeur += 5;
         }
         return profondeur;
     }

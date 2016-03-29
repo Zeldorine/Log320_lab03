@@ -3,6 +3,8 @@ package log320_lab03;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import static log320_lab03.AlphaBeta.timer;
 
 /**
  *
@@ -19,11 +21,7 @@ public class Client {
     public static final int NOIR = 4;
     public static int COULEUR_JOUEUR;
     public static int COULEUR_ENNEMIE;
-    private static Move firstBestMove;
     public static Move bestMoveG;
-    public static SimpleStopwatch Watch = new SimpleStopwatch();
-    public static int nbBlanc = 16;
-    public static int nbNoir = 16;
 
     /**
      * Blanc joue en premier 5 seconde pour jouer Garder un tableua de pion
@@ -45,6 +43,7 @@ public class Client {
                     // Debut de la partie en joueur blanc
                     case '1':
                         Chrono.start();
+                        timer.Start();
                         initBlanc();
                         Chrono.stop();
                         break;
@@ -57,6 +56,7 @@ public class Client {
                     // Le serveur demande le prochain coup
                     case '3':
                         Chrono.start();
+                        timer.Start();
                         byte[] aBuffer = new byte[16];
                         input.read(aBuffer, 0, input.available());
                         String s = new String(aBuffer);
@@ -86,16 +86,13 @@ public class Client {
     }
 
     private static void jouer() throws IOException {
-        bestMoveG = null;
         ArrayList<Move> coupsPossible = FonctionEvaluation_NEW.coupPossible(board, COULEUR_JOUEUR);
-        firstBestMove = coupsPossible.get(0);
         bestMoveG = AlphaBeta.AlphaBetaIteratif(board, COULEUR_JOUEUR, true, coupsPossible);
 
         if (bestMoveG == null) {
-            bestMoveG = firstBestMove;
+            bestMoveG = coupsPossible.get(0);
         }
 
-        //String move = bestMoveG.move;
         StringBuilder tmp = new StringBuilder();
         tmp.append(Service.getLigne(bestMoveG.departX));
         tmp.append(bestMoveG.departY + 1);
@@ -106,12 +103,12 @@ public class Client {
         output.write(move.getBytes(), 0, move.length());
         output.flush();
 
-        Watch.Stop();
         System.out.println("Coup jouer : " + move + " -> " + bestMoveG.valeur);
         Service.effectuerMove(board, move, COULEUR_JOUEUR);
 
         bestMoveG = null;
-        firstBestMove = null;
+        TableTransposition.instance.Table = new HashMap<>();
+        timer.Reset();
     }
 
     private static void afficherCoupValide(ArrayList<Move> coupsPossible) {
